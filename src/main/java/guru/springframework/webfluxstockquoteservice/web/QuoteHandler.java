@@ -22,7 +22,7 @@ public class QuoteHandler {
     }
 
     public Mono<ServerResponse> fetchQuotes(ServerRequest request){
-        int size = Integer.parseInt(request.queryParam("size").orElse(10));
+        int size = Integer.parseInt(request.queryParam("size").orElse("10"));
 
         return ok()
                 .contentType(MediaType.APPLICATION_JSON)
