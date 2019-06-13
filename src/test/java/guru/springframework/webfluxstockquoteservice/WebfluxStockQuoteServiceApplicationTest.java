@@ -9,12 +9,14 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import java.util.concurrent.CountDownLatch;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class WebfluxStockQuoteServiceApplicationTests {
+public class WebfluxStockQuoteServiceApplicationTest {
 
 	@Autowired
 	private WebTestClient webTestClient;
@@ -36,5 +38,25 @@ public class WebfluxStockQuoteServiceApplicationTests {
 					assertThat(allQuotes.getResponseBody()).hasSize(20);
 				});
 	}
+
+	@Test
+    public void testStreamQuotes() throws InterruptedException {
+	    CountDownLatch countDownLatch = new CountDownLatch(10);
+
+        webTestClient
+                .get()
+                .uri("/quotes")
+                .accept(MediaType.APPLICATION_STREAM_JSON)
+                .exchange()
+                .returnResult(Quote.class)
+                .getResponseBody()
+                .take(10)
+                .subscribe(quote->{
+                    assertThat(quote.getPrice()).isPositive();
+                    countDownLatch.countDown();
+                });
+
+        countDownLatch.await();
+    }
 
 }
